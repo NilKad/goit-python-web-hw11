@@ -14,16 +14,6 @@ from src.repositories import contacts as repositories_contact
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
 
-@router.get("/", response_model=list[ContactResponse])
-async def get_contacts(
-    limit: int = Query(10, ge=10, le=500),
-    offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
-):
-    contacts = await repositories_contact.get_contacts(limit, offset, db)
-    return contacts
-
-
 @router.get("/search", response_model=list[ContactResponse])
 async def search_contacts(
     first_name: str = None,
@@ -74,6 +64,17 @@ async def get_contact_by_id(
     print("!!!!!!!!! -----------4")
 
     return contact
+
+
+@router.get("/", response_model=list[ContactResponse])
+async def get_contacts(
+    limit: int = Query(10, ge=10, le=500),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    print("@@@@@@@ get /")
+    contacts = await repositories_contact.get_contacts(limit, offset, db)
+    return contacts
 
 
 @router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)

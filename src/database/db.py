@@ -24,10 +24,12 @@ class DataBaseSessionManager:
         try:
             yield session
         except Exception as err:
-            print(err)
+            print(f"$$$$$$$$$$$$$$$ {err}")
             await session.rollback()
+            print(f"_________________ rollback finished")
         finally:
             await session.close()
+            print(f"_________++++++++++________ seesion closed")
 
 
 sessionmanager = DataBaseSessionManager(config.DB_URL)
