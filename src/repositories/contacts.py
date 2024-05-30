@@ -1,9 +1,12 @@
+import logging
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Contact
 from src.schemas.contact import ContactSchema
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 async def get_contacts(limit: int, offset: int, db: AsyncSession):
     stmt = select(Contact).offset(offset).limit(limit)
@@ -19,9 +22,7 @@ async def search_contacts(filters: list, limit: int, offset: int, db: AsyncSessi
 
 async def get_contact_by_id(contact_id: int, db: AsyncSession):
     stmt = select(Contact).filter_by(id=contact_id)
-    print("!!!!!!!!! -----------1")
     contact = await db.execute(stmt)
-    print("!!!!!!!!! -----------2")
     return contact.scalar_one_or_none()
 
 

@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
+import logging
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Path, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.contact import (
@@ -10,6 +13,9 @@ from src.database.db import get_db
 
 
 from src.repositories import contacts as repositories_contact
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -48,21 +54,19 @@ async def next_birthday(next_day: int = 7, db: AsyncSession = Depends(get_db)):
     return contacts
 
 
-@router.get("/{contact_id}", response_model=ContactResponse)
+@router.get("/{contact_id}", response_model=Optional[ContactResponse])
 async def get_contact_by_id(
     contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db)
 ):
     contact = await repositories_contact.get_contact_by_id(contact_id, db)
     if contact is None:
-        print("!!!!!!!!! -----------3 -----------------------")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            # status_code=400,
-            detail=f"Contact with id {contact_id} not found",
-        )
-        # return []
-    print("!!!!!!!!! -----------4")
-
+        # raise HTTPException(
+        #     status_code=status.HTTP_404_NOT_FOUND,
+        #     # status_code=400,
+        #     detail=f"Contact with id {contact_id} not found",
+        # )
+        # return None
+        return JSONResponse(status_code=404, content={"detail": "Contact not found"})
     return contact
 
 
@@ -72,7 +76,6 @@ async def get_contacts(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    print("@@@@@@@ get /")
     contacts = await repositories_contact.get_contacts(limit, offset, db)
     return contacts
 
@@ -83,7 +86,7 @@ async def add_contact(body: ContactSchema, db: AsyncSession = Depends(get_db)):
     return contact
 
 
-@router.put("/{contact_id}")
+@router.put("/{contact_id}", response_model=Optional[ContactResponse])
 async def update_contact(
     body: ContactSchema,
     contact_id: int = Path(ge=1),
@@ -91,10 +94,7 @@ async def update_contact(
 ):
     contact = await repositories_contact.update_contact(contact_id, body, db)
     if contact is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Contact with id {contact_id} not found",
-        )
+        return JSONResponse(status_code=404, content={"detail": "Contact not found"})
     return contact
 
 

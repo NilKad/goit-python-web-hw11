@@ -1,19 +1,26 @@
 import contextlib
+import logging
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     async_sessionmaker,
     create_async_engine,
+    AsyncSession,
 )
 
 from src.config.config import config
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class DataBaseSessionManager:
     def __init__(self, url: str):
-        self._engine: AsyncEngine | None = create_async_engine(url)
+        # self._engine: AsyncEngine | None = create_async_engine(url)
+        self._engine: Optional[AsyncEngine] = create_async_engine(url)
         self._session_maker: async_sessionmaker = async_sessionmaker(
-            autoflush=False, autocommit=False, bind=self._engine
+            autoflush=False, autocommit=False, bind=self._engine, class_=AsyncSession
         )
 
     @contextlib.asynccontextmanager
@@ -24,12 +31,12 @@ class DataBaseSessionManager:
         try:
             yield session
         except Exception as err:
-            print(f"$$$$$$$$$$$$$$$ {err}")
+            # logger.error(f"$$$$$$$$$$$$$$$-----$$$$$$$$$ {err}")
             await session.rollback()
-            print(f"_________________ rollback finished")
+            # logger.error(f"_________________ rollback finished")
         finally:
             await session.close()
-            print(f"_________++++++++++________ seesion closed")
+            # logger.info(f"_________++++++++++________ seesion closed")
 
 
 sessionmanager = DataBaseSessionManager(config.DB_URL)
